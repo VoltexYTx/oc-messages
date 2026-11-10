@@ -8,10 +8,15 @@
   <style>
     :root { color-scheme: light dark; --bg:#f5f5f7; --card:#fff; --text:#17171a; --muted:#74747b; --line:#e5e5ea; --blue:#007aff; --incoming:#e9e9eb; }
     @media (prefers-color-scheme: dark) { :root { --bg:#101114; --card:#1c1c1e; --text:#f7f7f9; --muted:#a0a0a8; --line:#343438; --incoming:#303034; } }
+    :root[data-theme="light"] { color-scheme:light; --bg:#f5f5f7; --card:#fff; --text:#17171a; --muted:#74747b; --line:#e5e5ea; --incoming:#e9e9eb; }
+    :root[data-theme="dark"] { color-scheme:dark; --bg:#101114; --card:#1c1c1e; --text:#f7f7f9; --muted:#a0a0a8; --line:#343438; --incoming:#303034; }
+    .theme-toggle { position:fixed;top:calc(12px + env(safe-area-inset-top));right:max(12px,calc((100vw - 660px)/2 + 12px));z-index:10;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:22px;padding:9px 12px;font-size:14px;box-shadow:0 2px 8px #0001; }
+    header h1 { padding-right:88px; }
     * {box-sizing:border-box} body {margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif} button,input {font:inherit} button {cursor:pointer} .app {max-width:660px;min-height:100dvh;margin:auto;background:var(--card)} header {padding:calc(26px + env(safe-area-inset-top)) 20px 16px;border-bottom:1px solid var(--line)} h1 {font-size:32px;letter-spacing:-1px;margin:0 0 5px} .subtitle {color:var(--muted);font-size:14px;margin:0} .section {padding:24px 20px 10px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)} .contact {display:flex;align-items:center;gap:14px;width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;padding:16px 20px;color:var(--text)} .contact:active {opacity:.65} .avatar {width:54px;height:54px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;color:white;font-weight:700;font-size:18px} .purple {background:linear-gradient(140deg,#986ac4,#4e326b)} .green {background:linear-gradient(140deg,#8a9c77,#425442)} .name {font-weight:650;font-size:17px} .detail {color:var(--muted);font-size:13px;margin-top:4px} .arrow {margin-left:auto;color:var(--muted);font-size:22px} .back {background:none;border:0;color:var(--blue);padding:0;font-size:16px} .screen[hidden] {display:none} .chat-head {display:flex;align-items:center;gap:12px} .chat-head h1 {font-size:22px;margin:0} .chat-list {padding:0} .chat {display:flex;flex-direction:column;min-height:100dvh} .chat header {padding-bottom:14px} .messages {flex:1;padding:20px;display:flex;flex-direction:column;gap:12px;justify-content:flex-end} .bubble {max-width:82%;padding:11px 15px;border-radius:19px;line-height:1.35;font-size:16px;align-self:flex-start;background:var(--incoming)} .bubble.mine {align-self:flex-end;background:var(--blue);color:white} .composer {padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;gap:9px} .composer input {flex:1;min-width:0;border:1px solid var(--line);border-radius:22px;padding:11px 14px;background:var(--bg);color:var(--text)} .composer button {border:0;background:var(--blue);color:#fff;border-radius:22px;padding:10px 15px} .note {font-size:12px;color:var(--muted);padding:10px 20px 20px}
   </style>
 </head>
 <body>
+  <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme">☾ Dark</button>
   <main class="app">
     <section id="choose" class="screen">
       <header><h1>OC Messages</h1><p class="subtitle">Choose who you're texting as</p></header>
@@ -31,6 +36,27 @@
     </section>
   </main>
   <script>
+    const themeKey = 'oc-messages-theme';
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+    let themePreference = 'system';
+    try { themePreference = localStorage.getItem(themeKey) || 'system'; } catch {}
+    if (!['light','dark','system'].includes(themePreference)) themePreference = 'system';
+    function applyTheme() {
+      const effective = themePreference === 'system' ? (systemTheme.matches ? 'dark' : 'light') : themePreference;
+      document.documentElement.dataset.theme = effective;
+      document.querySelector('meta[name="theme-color"]').content = effective === 'dark' ? '#101114' : '#f5f5f7';
+      const button = document.getElementById('theme-toggle');
+      button.textContent = effective === 'dark' ? '☀ Light' : '☾ Dark';
+      button.setAttribute('aria-label', 'Switch to ' + (effective === 'dark' ? 'light' : 'dark') + ' mode');
+    }
+    applyTheme();
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const current = document.documentElement.dataset.theme;
+      themePreference = current === 'dark' ? 'light' : 'dark';
+      try { localStorage.setItem(themeKey, themePreference); } catch {}
+      applyTheme();
+    });
+    systemTheme.addEventListener?.('change', () => { if (themePreference === 'system') applyTheme(); });
     const profiles = {
       winchester: { name: 'Asher Winchester', subtitle: 'Supernatural · Season 10', contacts: ['Dean Winchester', 'Sam Winchester', 'Castiel'] },
       mactavish: { name: 'Asher MacTavish', subtitle: 'Call of Duty · MWII (2022)', contacts: ["John 'Soap' MacTavish", "Simon 'Ghost' Riley", 'John Price'] }
