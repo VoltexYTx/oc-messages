@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f5f7" />
+  <title>OC Messages</title>
+  <style>
+    :root { color-scheme: light dark; --bg:#f5f5f7; --card:#fff; --text:#17171a; --muted:#74747b; --line:#e5e5ea; --blue:#007aff; --incoming:#e9e9eb; }
+    @media (prefers-color-scheme: dark) { :root { --bg:#101114; --card:#1c1c1e; --text:#f7f7f9; --muted:#a0a0a8; --line:#343438; --incoming:#303034; } }
+    * {box-sizing:border-box} body {margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif} button,input {font:inherit} button {cursor:pointer} .app {max-width:660px;min-height:100dvh;margin:auto;background:var(--card)} header {padding:calc(26px + env(safe-area-inset-top)) 20px 16px;border-bottom:1px solid var(--line)} h1 {font-size:32px;letter-spacing:-1px;margin:0 0 5px} .subtitle {color:var(--muted);font-size:14px;margin:0} .section {padding:24px 20px 10px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)} .contact {display:flex;align-items:center;gap:14px;width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;padding:16px 20px;color:var(--text)} .contact:active {opacity:.65} .avatar {width:54px;height:54px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;color:white;font-weight:700;font-size:18px} .purple {background:linear-gradient(140deg,#986ac4,#4e326b)} .green {background:linear-gradient(140deg,#8a9c77,#425442)} .name {font-weight:650;font-size:17px} .detail {color:var(--muted);font-size:13px;margin-top:4px} .arrow {margin-left:auto;color:var(--muted);font-size:22px} .back {background:none;border:0;color:var(--blue);padding:0;font-size:16px} .screen[hidden] {display:none} .chat-head {display:flex;align-items:center;gap:12px} .chat-head h1 {font-size:22px;margin:0} .chat-list {padding:0} .chat {display:flex;flex-direction:column;min-height:100dvh} .chat header {padding-bottom:14px} .messages {flex:1;padding:20px;display:flex;flex-direction:column;gap:12px;justify-content:flex-end} .bubble {max-width:82%;padding:11px 15px;border-radius:19px;line-height:1.35;font-size:16px;align-self:flex-start;background:var(--incoming)} .bubble.mine {align-self:flex-end;background:var(--blue);color:white} .composer {padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;gap:9px} .composer input {flex:1;min-width:0;border:1px solid var(--line);border-radius:22px;padding:11px 14px;background:var(--bg);color:var(--text)} .composer button {border:0;background:var(--blue);color:#fff;border-radius:22px;padding:10px 15px} .note {font-size:12px;color:var(--muted);padding:10px 20px 20px}
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="choose" class="screen">
+      <header><h1>OC Messages</h1><p class="subtitle">Choose who you're texting as</p></header>
+      <div class="section">Your characters</div>
+      <button class="contact" data-oc="winchester"><span class="avatar purple">AW</span><span><span class="name">Asher Winchester</span><span class="detail" style="display:block">Supernatural · Season 10</span></span><span class="arrow">›</span></button>
+      <button class="contact" data-oc="mactavish"><span class="avatar green">AM</span><span><span class="name">Asher MacTavish</span><span class="detail" style="display:block">Call of Duty · MWII (2022)</span></span><span class="arrow">›</span></button>
+      <p class="note">Version 1.0 interface preview. AI replies and cloud sync are not connected yet.</p>
+    </section>
+    <section id="inbox" class="screen" hidden>
+      <header><button class="back" id="back-ocs">‹ Characters</button><h1 id="inbox-title" style="margin-top:16px">Messages</h1><p class="subtitle" id="inbox-subtitle"></p></header>
+      <div class="section">Conversations</div><div id="contacts" class="chat-list"></div>
+    </section>
+    <section id="conversation" class="screen chat" hidden>
+      <header><div class="chat-head"><button class="back" id="back-inbox">‹ Back</button><div><h1 id="contact-title"></h1><p class="subtitle">Interface preview · AI not connected</p></div></div></header>
+      <div class="messages" id="messages"><div class="bubble">Start a conversation!</div></div>
+      <form class="composer" id="composer"><input id="message-input" placeholder="iMessage" aria-label="Message" autocomplete="off" required /><button type="submit">Send</button></form>
+    </section>
+  </main>
+  <script>
+    const profiles = {
+      winchester: { name: 'Asher Winchester', subtitle: 'Supernatural · Season 10', contacts: ['Dean Winchester', 'Sam Winchester', 'Castiel'] },
+      mactavish: { name: 'Asher MacTavish', subtitle: 'Call of Duty · MWII (2022)', contacts: ["John 'Soap' MacTavish", "Simon 'Ghost' Riley", 'John Price'] }
+    };
+    let activeOC = null, activeContact = null;
+    const $ = id => document.getElementById(id);
+    function show(id) { document.querySelectorAll('.screen').forEach(s => s.hidden = s.id !== id); }
+    function openOC(key) {
+      activeOC = key; $('inbox-title').textContent = profiles[key].name; $('inbox-subtitle').textContent = profiles[key].subtitle;
+      $('contacts').replaceChildren();
+      profiles[key].contacts.forEach(name => {
+        const btn = document.createElement('button'); btn.className = 'contact';
+        const avatar = document.createElement('span'); avatar.className = 'avatar ' + (key === 'winchester' ? 'purple' : 'green'); avatar.textContent = name.split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+        const label = document.createElement('span'); label.className = 'name'; label.textContent = name;
+        const arrow = document.createElement('span'); arrow.className = 'arrow'; arrow.textContent = '›';
+        btn.append(avatar,label,arrow); btn.addEventListener('click', () => openChat(name)); $('contacts').append(btn);
+      });
+      show('inbox');
+    }
+    function openChat(name) { activeContact = name; $('contact-title').textContent = name; renderMessages(); show('conversation'); }
+    function storageKey() { return 'oc-messages-preview:' + activeOC + ':' + activeContact; }
+    function renderMessages() {
+      const area = $('messages'); area.replaceChildren();
+      let saved = []; try { saved = JSON.parse(localStorage.getItem(storageKey()) || '[]'); } catch {}
+      if (!saved.length) { const hint = document.createElement('div'); hint.className = 'bubble'; hint.textContent = 'Start a conversation!'; area.append(hint); }
+      saved.forEach(message => { const bubble = document.createElement('div'); bubble.className = 'bubble mine'; bubble.textContent = message; area.append(bubble); });
+    }
+    document.querySelectorAll('[data-oc]').forEach(btn => btn.addEventListener('click', () => openOC(btn.dataset.oc)));
+    $('back-ocs').addEventListener('click', () => show('choose'));
+    $('back-inbox').addEventListener('click', () => show('inbox'));
+    $('composer').addEventListener('submit', event => {
+      event.preventDefault(); const input = $('message-input'); const value = input.value.trim(); if (!value) return;
+      let saved = []; try { saved = JSON.parse(localStorage.getItem(storageKey()) || '[]'); } catch {}
+      saved.push(value); try { localStorage.setItem(storageKey(), JSON.stringify(saved)); } catch {}
+      input.value = ''; renderMessages();
+    });
+  </script>
+</body>
+</html>
